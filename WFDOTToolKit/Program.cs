@@ -26,7 +26,15 @@ namespace WFDOTToolKit
             }
 
             string line;
-            Console.WriteLine("1=html 2=html (full) 3=docx 4=docx-full testpage 5=docx-full 6=dic 7=counterpart without index 8=wrong assignments 9=import excel 10=excel cleanup");
+            Console.WriteLine("=== Ausgabe ===");
+            Console.WriteLine(" 1=html                  2=html (full)          3=docx");
+            Console.WriteLine(" 4=docx-full             5=docx-full and pdf    6=docx-full testpage");
+            Console.WriteLine("=== Wörterbuch-Datei ===");
+            Console.WriteLine(" 7=dic                  8=frs_FRS");
+            Console.WriteLine("=== Prüfen ===");
+            Console.WriteLine(" 9=counterpart without index   10=wrong assignments");
+            Console.WriteLine("=== Import ===");
+            Console.WriteLine("11=import excel         12=excel cleanup");
             line = Console.ReadLine();
             switch (line)
             {
@@ -44,26 +52,43 @@ namespace WFDOTToolKit
                     WFDOTToDocx.ToDocx(false, @"C:\Users\Neronno\Desktop\gen", false);
                     break;
                 case "4":
-                    WFDOTToDocx.ToDocx(true, @"C:\Users\Neronno\Desktop\gen", true);
-                    break;
-                case "5":
                     WFDOTToDocx.ToDocx(true, @"C:\Users\Neronno\Desktop\gen", false);
                     break;
+                case "5":
+                    string genPath = @"C:\Users\Neronno\Desktop\gen";
+                    WFDOTToDocx.ToDocx(true, genPath, false);
+                    try
+                    {
+                        WFDOTToPdf.ExportToPdf(
+                            WFDOTToDocx.GetMainFile(genPath),
+                            Path.Combine(genPath, "WFDOT.pdf"));
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"FEHLER beim PDF-Export: {ex.Message}");
+                    }
+                    break;
                 case "6":
+                    WFDOTToDocx.ToDocx(true, @"C:\Users\Neronno\Desktop\gen", true);
+                    break;
+                case "7":
                     string dic;
                     dic = WFDOTToDic.Todic();
                     File.WriteAllText(@"C:\Users\Neronno\Desktop\frs.dic", dic, Encoding.Unicode);
                     break;
-                case "7":
-                    WFDOTChecker.DublicatesWithoutIndex();
-                    break;
                 case "8":
-                    WFDOTChecker.ShowWrongReference();
+                    WFDOTToFrs.WriteFrs(WFDOTToFrs.DefaultTarget);
                     break;
                 case "9":
-                    WFDOTImport.Import();
+                    WFDOTChecker.DublicatesWithoutIndex();
                     break;
                 case "10":
+                    WFDOTChecker.ShowWrongReference();
+                    break;
+                case "11":
+                    WFDOTImport.Import();
+                    break;
+                case "12":
                     WFDOTImport.Cleanup();
                     break;
             }
