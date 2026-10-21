@@ -72,9 +72,7 @@ namespace WFDOTToolKit
                     WFDOTToDocx.ToDocx(true, @"C:\Users\Neronno\Desktop\gen", true);
                     break;
                 case "7":
-                    string dic;
-                    dic = WFDOTToDic.Todic();
-                    File.WriteAllText(@"C:\Users\Neronno\Desktop\frs.dic", dic, Encoding.Unicode);
+                    WFDOTToDic.WriteDic(@"C:\Users\Neronno\Desktop\frs.dic");
                     break;
                 case "8":
                     WFDOTToFrs.WriteFrs(WFDOTToFrs.DefaultTarget);
