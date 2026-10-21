@@ -6,6 +6,7 @@ namespace WFDOTToolKit
 {
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
@@ -17,8 +18,15 @@ namespace WFDOTToolKit
                 return;
             }
 
+            // Non-interactive cleanup: WFDOTToolKit.exe cleanup <excel>
+            if (args.Length == 2 && args[0].Equals("cleanup", StringComparison.OrdinalIgnoreCase) && File.Exists(args[1]))
+            {
+                WFDOTImport.Cleanup(args[1]);
+                return;
+            }
+
             string line;
-            Console.WriteLine("1=html 2=html (full) 3=docx 4=docx-full testpage 5=docx-full 6=dic 7=counterpart without index 8=wrong assignments 9=import excel");
+            Console.WriteLine("1=html 2=html (full) 3=docx 4=docx-full testpage 5=docx-full 6=dic 7=counterpart without index 8=wrong assignments 9=import excel 10=excel cleanup");
             line = Console.ReadLine();
             switch (line)
             {
@@ -54,6 +62,9 @@ namespace WFDOTToolKit
                     break;
                 case "9":
                     WFDOTImport.Import();
+                    break;
+                case "10":
+                    WFDOTImport.Cleanup();
                     break;
             }
         }
