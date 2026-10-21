@@ -1,16 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
 
-namespace WFDOTtoPDF
+namespace WFDOTToolKit
 {
     public class WFDOTChecker
     {
         public static void ShowWrongReference()
         {
             SQLiteConnection connection = new SQLiteConnection();
-            connection.ConnectionString = @"Data Source=D:\source\repos\WFDOTtoPDF\WFDOTtoPDF\WFDOT.db";
+            connection.ConnectionString = @"Data Source=D:\source\repos\WFDOTToolKit\WFDOTToolKit\WFDOT.db";
             connection.Open();
             string sqlCom = "SELECT * FROM WB WHERE Wortart = 'Phrase' AND Zuordnung != '-'";
             SQLiteCommand scdCommand = new SQLiteCommand(sqlCom, connection);
@@ -56,7 +56,7 @@ namespace WFDOTtoPDF
         public static void DublicatesWithoutIndex()
         {
             SQLiteConnection connection = new SQLiteConnection();
-            connection.ConnectionString = @"Data Source=D:\source\repos\WFDOTtoPDF\WFDOTtoPDF\WFDOT.db";
+            connection.ConnectionString = @"Data Source=D:\source\repos\WFDOTToolKit\WFDOTToolKit\WFDOT.db";
             connection.Open();
             string sqlCom = "SELECT * FROM WB WHERE Nummer = '-'";
             SQLiteCommand scdCommand = new SQLiteCommand(sqlCom, connection);

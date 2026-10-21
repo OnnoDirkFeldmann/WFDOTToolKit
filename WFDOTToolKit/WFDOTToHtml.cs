@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Data.SQLite;
 
-namespace WFDOTtoPDF
+namespace WFDOTToolKit
 {
     public class WFDOTToHtml
     {
         public static string Tohtml(bool fullversion)
         {
             SQLiteConnection connection = new SQLiteConnection();
-            connection.ConnectionString = @"Data Source=C:\Users\Neronno\source\repos\WFDOTtoPDF\WFDOTtoPDF\WFDOT.db";
+            connection.ConnectionString = @"Data Source=D:\source\repos\WFDOTToolKit\WFDOTToolKit\WFDOT.db";
             connection.Open();
 
             string sqlCom = "SELECT * FROM WB WHERE Wortart != 'Phrase'";
@@ -64,7 +64,7 @@ namespace WFDOTtoPDF
                 {
                     switch (wortart)
                     {
-                        case "Abkürzung":
+                        case "Abk�rzung":
                             wortartstring = "-";
                             break;
                         case "Adjektiv":

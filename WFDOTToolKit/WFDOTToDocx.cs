@@ -1,4 +1,4 @@
-ï»¿using Novacode;
+using Novacode;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace WFDOTtoPDF
+namespace WFDOTToolKit
 {
     public class WFDOTToDocx
     {
@@ -16,7 +16,7 @@ namespace WFDOTtoPDF
             Directory.Delete(path, true);
             Directory.CreateDirectory(path);
             SQLiteConnection connection = new SQLiteConnection();
-            connection.ConnectionString = @"Data Source=D:\source\repos\WFDOTtoPDF\WFDOTtoPDF\WFDOT.db";
+            connection.ConnectionString = @"Data Source=D:\source\repos\WFDOTToolKit\WFDOTToolKit\WFDOT.db";
             connection.Open();
             var sql1 = testMode ? "SELECT * FROM WB WHERE Ostfriesisch Like 'a%'" : "SELECT * FROM WB";
             string sqlCom = sql1;
@@ -50,7 +50,7 @@ namespace WFDOTtoPDF
             textFormatItalic.Size = 8D;
             textFormatItalic.Italic = true;
 
-            //OostfrÃ¤isk woorden hÃ³Ã³len
+            //Oostfräisk woorden hóólen
             var files = new List<string>();
             var i = 0;
             var docIndex = 0;
@@ -81,7 +81,7 @@ namespace WFDOTtoPDF
                 {
                     switch (row.Wortart)
                     {
-                        case "AbkÃ¼rzung":
+                        case "Abkürzung":
                             wortartstring = "-";
                             break;
                         case "Adjektiv":
@@ -268,7 +268,7 @@ namespace WFDOTtoPDF
             var ohneZuordnung = wfdot._WFDOT.Where(x => x.Wortart == "Phrase" && x.Zuordnung == "-").ToList();
             if (ohneZuordnung.Any())
             {
-                //frÃ³Ã³sen sÃ¼nner tauÃ¶rnen
+                //fróósen sünner tauörnen
                 var fileOhneZuordnung = $@"{path}\outOhneZu.docx";
                 files.Add(fileOhneZuordnung);
                 doc = DocX.Create(fileOhneZuordnung);

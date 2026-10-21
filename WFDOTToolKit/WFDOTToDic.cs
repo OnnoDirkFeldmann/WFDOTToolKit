@@ -1,9 +1,9 @@
-Ôªøusing System.Collections.Generic;
+using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace WFDOTtoPDF
+namespace WFDOTToolKit
 {
     public class WFDOTToDic
     {
@@ -12,7 +12,7 @@ namespace WFDOTtoPDF
             string dictstring;
             dictstring = "";
             SQLiteConnection connection = new SQLiteConnection();
-            connection.ConnectionString = @"Data Source=D:\source\repos\WFDOTtoPDF\WFDOTtoPDF\WFDOT.db";
+            connection.ConnectionString = @"Data Source=D:\source\repos\WFDOTToolKit\WFDOTToolKit\WFDOT.db";
             connection.Open();
             string sqlCom = "SELECT * FROM WB";
             SQLiteCommand scdCommand = new SQLiteCommand(sqlCom, connection);
@@ -46,7 +46,7 @@ namespace WFDOTtoPDF
                     komparation = Regex.Replace(komparation, "\\((.+?)\\)", "");
                     komparation = komparation.Replace("stark<br/>Positiv: ", " ");
                     komparation = komparation.Replace("schwach<br/>Positiv: ", " ");
-                    komparation = komparation.Replace("<br/>Komparativ (pr√§dikativ): ", " ");
+                    komparation = komparation.Replace("<br/>Komparativ (pr‰dikativ): ", " ");
                     komparation = komparation.Replace("<br/>Komparativ (attributiv): ", " ");
                     komparation = komparation.Replace("<br/>Superlativ : ", " ");
                     komparation = komparation.Replace("<br/>Attributiv (bestimmter Artikel/unbestimmter Artikel m./f.): ", " ");
@@ -68,8 +68,8 @@ namespace WFDOTtoPDF
                     konjugation = konjugation.Replace("schwach<br/>Inf.: ", " ");
                     konjugation = konjugation.Replace("stark (Praet.-Praes.)<br/>Inf.: ", " ");
                     konjugation = konjugation.Replace("<br/>Imp: ", " ");
-                    konjugation = konjugation.Replace("<br/>Pr√§s.: ", " ");
-                    konjugation = konjugation.Replace("<br/>Pr√§t.: ", " ");
+                    konjugation = konjugation.Replace("<br/>Pr‰s.: ", " ");
+                    konjugation = konjugation.Replace("<br/>Pr‰t.: ", " ");
                     konjugation = konjugation.Replace("<br/>Part.I: ", " ");
                     konjugation = konjugation.Replace("<br/>Part.II: ", " ");
                     konjugation = konjugation.Replace("<br/>", " ");

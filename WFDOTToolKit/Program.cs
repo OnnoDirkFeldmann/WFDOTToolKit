@@ -1,16 +1,24 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 
-namespace WFDOTtoPDF
+namespace WFDOTToolKit
 {
     class Program
     {
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
+
+            // Non-interactive import: WFDOTToolKit.exe <excel> <db>
+            if (args.Length == 2 && File.Exists(args[0]))
+            {
+                WFDOTImport.Import(args[0], args[1]);
+                return;
+            }
+
             string line;
-            Console.WriteLine("1=html 2=html (full) 3=docx 4=docx-full testpage 5=docx-full 6=dic 7=counterpart without index 8=wrong assignments");
+            Console.WriteLine("1=html 2=html (full) 3=docx 4=docx-full testpage 5=docx-full 6=dic 7=counterpart without index 8=wrong assignments 9=import excel");
             line = Console.ReadLine();
             switch (line)
             {
@@ -43,6 +51,9 @@ namespace WFDOTtoPDF
                     break;
                 case "8":
                     WFDOTChecker.ShowWrongReference();
+                    break;
+                case "9":
+                    WFDOTImport.Import();
                     break;
             }
         }

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WFDOTtoPDF", "WFDOTtoPDF\WFDOTtoPDF.csproj", "{CA1034F2-FE34-451C-B9D3-9FEA94047C55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WFDOTToolKit", "WFDOTToolKit\WFDOTToolKit.csproj", "{CA1034F2-FE34-451C-B9D3-9FEA94047C55}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
