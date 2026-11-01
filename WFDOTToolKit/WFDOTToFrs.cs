@@ -55,7 +55,7 @@ namespace WFDOTToolKit
             // UTF-8 without byte order mark.
             File.WriteAllText(target, content, new UTF8Encoding(false));
 
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {lines.Count} Wörter nach {target} geschrieben.");
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {lines.Count} words written to {target}.");
         }
 
         /// <summary>Collects all usable words of the dictionary.</summary>
@@ -132,7 +132,7 @@ namespace WFDOTToolKit
             return text;
         }
 
-        /// <summary>Removes the bracketed explanations, e.g. "(prädikativ)".</summary>
+        /// <summary>Removes the bracketed explanations, e.g. "(comparative)".</summary>
         private static string RemoveBrackets(string text)
         {
             return Regex.Replace(text, "\\((.+?)\\)", "");

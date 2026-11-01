@@ -24,7 +24,7 @@ namespace WFDOTToolKit
         /// <summary>Path of the dictionary database.</summary>
         private const string DatabasePath = @"D:\source\repos\WFDOTToolKit\WFDOTToolKit\WFDOT.db";
 
-        /// <summary>Removes the explanations in brackets, e.g. "(prädikativ)".</summary>
+        /// <summary>Removes the explanations in brackets, e.g. "(comparative)".</summary>
         private static readonly Regex Brackets = new Regex("\\((.+?)\\)", RegexOptions.Compiled);
 
         /// <summary>Returns the whole word list as one string.</summary>

@@ -15,7 +15,7 @@ namespace WFDOTToolKit
             SQLiteCommand scdCommand = new SQLiteCommand(sqlCom, connection);
             SQLiteDataReader reader = scdCommand.ExecuteReader();
 
-            //Ostfriesische Begriffe holen
+            // Fetch the East Frisian terms
             string ostfriesisch;
             string standardform;
             string konjugation;
@@ -59,12 +59,12 @@ namespace WFDOTToolKit
 
                 temp = ostfriesisch;
 
-                string wortartstring = "Wortartfehler";
+                string wortartstring = "WordClassError";
                 if (wortart != "-")
                 {
                     switch (wortart)
                     {
-                        case "Abkürzung":
+                        case "Abkï¿½rzung":
                             wortartstring = "-";
                             break;
                         case "Adjektiv":
@@ -150,7 +150,7 @@ namespace WFDOTToolKit
 
                 if (genus != "-")
                 {
-                    string genusstring = "Genusfehler";
+                    string genusstring = "GenusError";
                     switch (genus)
                     {
                         case "m":
@@ -223,7 +223,7 @@ namespace WFDOTToolKit
                 list.Add(temp);
             }
             reader.Close();
-            // Phrasen anreichern
+            // Attach the phrases
             for (int i = 0; i < ostfriesischewoerter.Count; i++)
             {
                 string final;
@@ -253,8 +253,8 @@ namespace WFDOTToolKit
                 writestring = writestring + final;
                 reader2.Close();
             }
-            //Phrasen ohne Zuordnung
-            string addition = "<span style=\"font-family:Verdana; font-size:11pt\"><br/><br/>Unzugeordnete Phrasen:<br/><br/><br/></span>";
+            //Phrases without an assignment
+            string addition = "<span style=\"font-family:Verdana; font-size:11pt\"><br/><br/>Unassigned phrases:<br/><br/><br/></span>";
             string sqlCom3 = "SELECT * FROM WB WHERE Wortart = 'Phrase' AND Zuordnung = '-'";
             SQLiteCommand scdCommand3 = new SQLiteCommand(sqlCom3, connection);
             scdCommand3.Prepare();

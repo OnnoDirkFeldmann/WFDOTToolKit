@@ -26,12 +26,12 @@ namespace WFDOTToolKit
             }
 
             string line;
-            Console.WriteLine("=== Ausgabe ===");
+            Console.WriteLine("=== Output ===");
             Console.WriteLine(" 1=html                  2=html (full)          3=docx");
             Console.WriteLine(" 4=docx-full             5=docx-full and pdf    6=docx-full testpage");
-            Console.WriteLine("=== Wörterbuch-Datei ===");
+            Console.WriteLine("=== Dictionary file ===");
             Console.WriteLine(" 7=dic                  8=frs_FRS");
-            Console.WriteLine("=== Prüfen ===");
+            Console.WriteLine("=== Check ===");
             Console.WriteLine(" 9=counterpart without index   10=wrong assignments");
             Console.WriteLine("=== Import ===");
             Console.WriteLine("11=import excel         12=excel cleanup");
@@ -65,7 +65,7 @@ namespace WFDOTToolKit
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"FEHLER beim PDF-Export: {ex.Message}");
+                        Console.WriteLine($"ERROR during PDF export: {ex.Message}");
                     }
                     break;
                 case "6":

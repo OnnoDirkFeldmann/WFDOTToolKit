@@ -30,19 +30,19 @@ namespace WFDOTToolKit
         {
             if (!File.Exists(docxPath))
             {
-                throw new FileNotFoundException("DOCX-Datei nicht gefunden.", docxPath);
+                throw new FileNotFoundException("DOCX file not found.", docxPath);
             }
 
             var wordType = Type.GetTypeFromProgID("Word.Application");
             if (wordType == null)
             {
                 throw new InvalidOperationException(
-                    "Microsoft Word ist auf diesem Rechner nicht installiert. " +
-                    "Ohne Word kann keine PDF-Datei erzeugt werden.");
+                    "Microsoft Word is not installed on this computer. " +
+                    "Without Word no PDF file can be created.");
             }
 
             var watch = Stopwatch.StartNew();
-            Log($"Exportiere PDF über Microsoft Word ({Path.GetFileName(docxPath)}) ...");
+            Log($"Exporting PDF via Microsoft Word ({Path.GetFileName(docxPath)}) ...");
 
             object wordObject = null;
             object documentObject = null;
@@ -125,7 +125,7 @@ namespace WFDOTToolKit
             }
 
             var size = new FileInfo(pdfPath).Length / 1024.0 / 1024.0;
-            Log($"PDF erzeugt: {pdfPath} ({size:F1} MB, {watch.Elapsed.TotalSeconds:F1} s).");
+            Log($"PDF created: {pdfPath} ({size:F1} MB, {watch.Elapsed.TotalSeconds:F1} s).");
         }
 
         private static void Log(string message)

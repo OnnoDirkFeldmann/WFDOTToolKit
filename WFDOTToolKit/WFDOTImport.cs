@@ -56,16 +56,16 @@ namespace WFDOTToolKit
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Title = "WFDOT Excel-Datei auswählen";
-                dialog.Filter = "Excel-Arbeitsmappe (*.xlsm;*.xlsx)|*.xlsm;*.xlsx|Alle Dateien (*.*)|*.*";
-                Log("Datei-Dialog geöffnet, warte auf Auswahl ...");
+                dialog.Title = "Select WFDOT Excel file";
+                dialog.Filter = "Excel workbook (*.xlsm;*.xlsx)|*.xlsm;*.xlsx|All files (*.*)|*.*";
+                Log("File dialog opened, waiting for selection ...");
                 if (dialog.ShowDialog() != DialogResult.OK)
                 {
-                    Log("Import abgebrochen (keine Datei ausgewählt).");
+                    Log("Import cancelled (no file selected).");
                     return;
                 }
 
-                Log($"Ausgewählte Datei: {dialog.FileName}");
+                Log($"Selected file: {dialog.FileName}");
                 Import(dialog.FileName, WfdotPath);
             }
         }
@@ -77,15 +77,15 @@ namespace WFDOTToolKit
         public static void Import(string excelPath, string sqlitePath)
         {
             var stopwatch = Stopwatch.StartNew();
-            Log("=== Import gestartet ===");
-            Log($"Excel-Datei : {excelPath}");
-            Log($"Datenbank   : {sqlitePath}");
+            Log("=== Import started ===");
+            Log($"Excel file: {excelPath}");
+            Log($"Database: {sqlitePath}");
 
             // Operate on a copy so the original workbook stays untouched even if Excel offers to save.
             var workbookCopy = Path.Combine(Path.GetTempPath(), "wfdot_import_" + Guid.NewGuid().ToString("N") + Path.GetExtension(excelPath));
-            Log("Erstelle Arbeitskopie der Excel-Datei (Original bleibt unverändert) ...");
+            Log("Creating a working copy of the Excel file (original stays unchanged) ...");
             File.Copy(excelPath, workbookCopy, true);
-            Log($"Arbeitskopie: {workbookCopy}");
+            Log($"Working copy: {workbookCopy}");
 
             Excel.Application xlApp = null;
             Excel.Workbook xlWorkbook = null;
@@ -94,27 +94,27 @@ namespace WFDOTToolKit
 
             try
             {
-                Log("Starte Excel ...");
+                Log("Starting Excel ...");
                 xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
-                Log("Öffne Arbeitskopie in Excel (schreibgeschützt) ...");
+                Log("Opening workbook copy in Excel (read-only) ...");
                 xlWorkbook = xlApp.Workbooks.Open(workbookCopy, ReadOnly: true);
                 xlWorksheet = (Excel.Worksheet)xlWorkbook.Sheets[1];
-                Log($"Verwende Arbeitsblatt: \"{xlWorksheet.Name}\"");
+                Log($"Using worksheet: \"{xlWorksheet.Name}\"");
                 xlRange = xlWorksheet.UsedRange;
 
                 int rowCount = xlRange.Rows.Count;
                 int colCount = xlRange.Columns.Count;
-                Log($"Erkannter Bereich: {rowCount - 1} Datenzeilen, {colCount} Spalten");
+                Log($"Detected range: {rowCount - 1} data rows, {colCount} columns");
 
                 // Read the entire used range in ONE COM call instead of one call per cell.
                 // This is the difference between minutes and seconds for large sheets.
-                Log("Lese den gesamten Bereich auf einmal aus Excel (kann bei großen Dateien kurz dauern) ...");
+                Log("Reading the whole range at once from Excel (may take a short while for large files) ...");
                 var readWatch = Stopwatch.StartNew();
                 var cells = (object[,])xlRange.Value2;
-                Log($"Bereich ausgelesen in {readWatch.Elapsed.TotalSeconds:F1} s.");
+                Log($"Range read in {readWatch.Elapsed.TotalSeconds:F1} s.");
 
                 // Map header names -> worksheet column index, honouring the ignore list.
-                Log("Lese Spaltenüberschriften ...");
+                Log("Reading column headers ...");
                 var headerToColumn = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                 for (int c = 1; c <= colCount; c++)
                 {
@@ -123,7 +123,7 @@ namespace WFDOTToolKit
                     {
                         if (IgnoredColumns.Contains(header))
                         {
-                            Log($"  Spalte {c} \"{header}\" wird übersprungen (nicht importieren).");
+                            Log($"  Column {c} \"{header}\" is skipped (not imported).");
                         }
                         continue;
                     }
@@ -144,18 +144,18 @@ namespace WFDOTToolKit
                 if (missing.Count > 0)
                 {
                     throw new InvalidOperationException(
-                        "In der Excel-Datei fehlen folgende Spalten: " + string.Join(", ", missing));
+                        "The following columns are missing in the Excel file: " + string.Join(", ", missing));
                 }
-                Log($"Alle {DbColumns.Length} benötigten Spalten gefunden.");
+                Log($"All {DbColumns.Length} required columns found.");
 
-                Log("Öffne Datenbank ...");
+                Log("Opening database ...");
                 using (var connection = new SQLiteConnection("Data Source=" + sqlitePath))
                 {
                     connection.Open();
 
                     using (var transaction = connection.BeginTransaction())
                     {
-                        Log("Leere Tabelle WB ...");
+                        Log("Clearing table WB ...");
                         Exec(connection, transaction,
                             "CREATE TABLE IF NOT EXISTS WB (ID INTEGER NOT NULL UNIQUE, " +
                             "Ostfriesisch TEXT NOT NULL, Deutsch TEXT NOT NULL, Artikel TEXT NOT NULL, " +
@@ -165,9 +165,9 @@ namespace WFDOTToolKit
                             "Etymologie TEXT NOT NULL, Kommentar TEXT NOT NULL, Rezept TEXT NOT NULL, " +
                             "Englisch TEXT NOT NULL, PRIMARY KEY (ID));");
                         Exec(connection, transaction, "DELETE FROM WB;");
-                        Log("Tabelle WB geleert.");
+                        Log("Table WB cleared.");
 
-                        Log("Schreibe Datenzeilen ...");
+                        Log("Writing data rows ...");
                         int imported = 0;
                         int skipped = 0;
                         int corrected = 0;
@@ -205,7 +205,7 @@ namespace WFDOTToolKit
                                     if (apostropheAdded)
                                     {
                                         corrected++;
-                                        Log($"  Korrektur Zeile {r}, Spalte \"{columnName}\": \"{original}\" -> \"{value}\"");
+                                        Log($"  Correction - row {r}, column \"{columnName}\": \"{original}\" -> \"{value}\"");
                                     }
                                     parameters[i].Value = value;
                                     if (value.Length > 0)
@@ -217,7 +217,7 @@ namespace WFDOTToolKit
                                 if (empty)
                                 {
                                     skipped++;
-                                    Log($"  Leere Zeile {r} übersprungen.");
+                                    Log($"  Empty row {r} skipped.");
                                     continue; // skip fully empty rows
                                 }
 
@@ -226,36 +226,36 @@ namespace WFDOTToolKit
 
                                 if (imported % 10000 == 0)
                                 {
-                                    Log($"  ... {imported} Zeilen geschrieben");
+                                    Log($"  ... {imported} rows written");
                                 }
                             }
                         }
 
-                        Log($"Datenzeilen geschrieben: {imported}" +
-                            (skipped > 0 ? $", übersprungen: {skipped}" : "") +
-                            (corrected > 0 ? $", Apostroph-Korrekturen: {corrected}" : "") +
-                            (trimmed > 0 ? $", Leerzeichen am Ende entfernt: {trimmed}" : ""));
-                        Log("Übernehme Änderungen (Commit) ...");
+                        Log($"Data rows written: {imported}" +
+                            (skipped > 0 ? $", skipped: {skipped}" : "") +
+                            (corrected > 0 ? $", apostrophe corrections: {corrected}" : "") +
+                            (trimmed > 0 ? $", trailing whitespace removed: {trimmed}" : ""));
+                        Log("Committing changes ...");
                         transaction.Commit();
-                        Log("Änderungen übernommen.");
+                        Log("Changes applied.");
                     }
 
-                    Log("Baue Suchindex (WBFTS) neu auf ...");
+                    Log("Rebuilding search index (WBFTS) ...");
                     RebuildFts(connection);
-                    Log("Suchindex neu aufgebaut.");
-                    Log("Datenbank geschlossen.");
+                    Log("Search index rebuilt.");
+                    Log("Database closed.");
                 }
 
-                Log($"Datenbank fertig in {stopwatch.Elapsed.TotalSeconds:F1} s.");
+                Log($"Database finished in {stopwatch.Elapsed.TotalSeconds:F1} s.");
             }
             catch (Exception ex)
             {
-                Log($"=== FEHLER: {ex.Message} ===");
+                Log($"=== ERROR: {ex.Message} ===");
                 throw;
             }
             finally
             {
-                Log("Schließe Excel und räume auf ...");
+                Log("Closing Excel and cleaning up ...");
                 if (xlWorkbook != null)
                 {
                     xlWorkbook.Close(false);
@@ -279,11 +279,11 @@ namespace WFDOTToolKit
                 GC.WaitForPendingFinalizers();
 
                 try { File.Delete(workbookCopy); } catch { /* best effort */ }
-                Log("Aufgeräumt.");
+                Log("Cleaned up.");
             }
 
             stopwatch.Stop();
-            Log($"=== Import erfolgreich abgeschlossen in {stopwatch.Elapsed.TotalSeconds:F1} s ===");
+            Log($"=== Import successfully completed in {stopwatch.Elapsed.TotalSeconds:F1} s ===");
         }
 
         /// <summary>
@@ -297,16 +297,16 @@ namespace WFDOTToolKit
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Title = "WFDOT Excel-Datei zum Bereinigen auswählen";
-                dialog.Filter = "Excel-Arbeitsmappe (*.xlsm;*.xlsx)|*.xlsm;*.xlsx|Alle Dateien (*.*)|*.*";
-                Log("Datei-Dialog geöffnet, warte auf Auswahl ...");
+                dialog.Title = "Select WFDOT Excel file to clean up";
+                dialog.Filter = "Excel workbook (*.xlsm;*.xlsx)|*.xlsm;*.xlsx|All files (*.*)|*.*";
+                Log("File dialog opened, waiting for selection ...");
                 if (dialog.ShowDialog() != DialogResult.OK)
                 {
-                    Log("Cleanup abgebrochen (keine Datei ausgewählt).");
+                    Log("Cleanup cancelled (no file selected).");
                     return;
                 }
 
-                Log($"Ausgewählte Datei: {dialog.FileName}");
+                Log($"Selected file: {dialog.FileName}");
                 Cleanup(dialog.FileName);
             }
         }
@@ -314,19 +314,19 @@ namespace WFDOTToolKit
         public static void Cleanup(string excelPath)
         {
             var stopwatch = Stopwatch.StartNew();
-            Log("=== Excel-Cleanup gestartet ===");
-            Log($"Excel-Datei : {excelPath}");
+            Log("=== Excel cleanup started ===");
+            Log($"Excel file: {excelPath}");
 
             if (!File.Exists(excelPath))
             {
-                throw new FileNotFoundException("Excel-Datei nicht gefunden.", excelPath);
+                throw new FileNotFoundException("Excel file not found.", excelPath);
             }
 
             // Back up the original before overwriting it.
             var backupPath = Path.Combine(
                 Path.GetDirectoryName(excelPath),
                 Path.GetFileNameWithoutExtension(excelPath) + "_backup_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + Path.GetExtension(excelPath));
-            Log($"Erstelle Backup: {backupPath}");
+            Log($"Created backup: {backupPath}");
             File.Copy(excelPath, backupPath, true);
 
             Excel.Application xlApp = null;
@@ -336,19 +336,19 @@ namespace WFDOTToolKit
 
             try
             {
-                Log("Starte Excel ...");
+                Log("Starting Excel ...");
                 xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
-                Log("Öffne Excel-Datei (beschreibbar) ...");
+                Log("Opening Excel file (writable) ...");
                 xlWorkbook = xlApp.Workbooks.Open(excelPath);
                 xlWorksheet = (Excel.Worksheet)xlWorkbook.Sheets[1];
-                Log($"Verwende Arbeitsblatt: \"{xlWorksheet.Name}\"");
+                Log($"Using worksheet: \"{xlWorksheet.Name}\"");
                 xlRange = xlWorksheet.UsedRange;
 
                 int rowCount = xlRange.Rows.Count;
                 int colCount = xlRange.Columns.Count;
-                Log($"Erkannter Bereich: {rowCount - 1} Datenzeilen, {colCount} Spalten");
+                Log($"Detected range: {rowCount - 1} data rows, {colCount} columns");
 
-                Log("Lese den gesamten Bereich auf einmal aus Excel ...");
+                Log("Reading the whole range at once from Excel ...");
                 var readWatch = Stopwatch.StartNew();
                 // Values are used to compute the changes.
                 var cells = (object[,])xlRange.Value2;
@@ -356,7 +356,7 @@ namespace WFDOTToolKit
                 // (Value2 only returns the computed result, so a full-range write would
                 //  silently replace every formula with its cached value.)
                 var formulas = (object[,])xlRange.Formula;
-                Log($"Bereich ausgelesen in {readWatch.Elapsed.TotalSeconds:F1} s.");
+                Log($"Range read in {readWatch.Elapsed.TotalSeconds:F1} s.");
 
                 // A cell is a formula cell when its formula differs from its value, i.e. it
                 // starts with "=". Such cells keep their formula and are never modified.
@@ -388,7 +388,7 @@ namespace WFDOTToolKit
                     columnNames[pair.Value] = pair.Key;
                 }
 
-                Log("Bereinige Zellen (Leerzeichen am Ende, Ostfriesisch-Klitika) ...");
+                Log("Cleaning cells (trailing whitespace, East Frisian clitics) ...");
 
                 // Phase 1: compute the cleaned value for every cell and collect the changes.
                 // Nothing is written yet. Formula cells are skipped so their formulas survive.
@@ -429,13 +429,13 @@ namespace WFDOTToolKit
 
                     if (r % 10000 == 0)
                     {
-                        Log($"  ... {r - 1} Zeilen geprüft");
+                        Log($"  ... {r - 1} rows checked");
                     }
                 }
 
                 if (skippedFormulaCells > 0)
                 {
-                    Log($"Formelzellen übersprungen (bleiben unverändert): {skippedFormulaCells}");
+                    Log($"Formula cells skipped (left unchanged): {skippedFormulaCells}");
                 }
 
                 int apostrophes = 0;
@@ -452,22 +452,22 @@ namespace WFDOTToolKit
                     }
                 }
 
-                Log($"Gefundene Änderungen: {changes.Count}" +
-                    (apostrophes > 0 ? $", davon Apostroph-Korrekturen: {apostrophes}" : "") +
-                    (whitespaceOnly > 0 ? $", davon nur Leerzeichen am Ende: {whitespaceOnly}" : ""));
+                Log($"Found changes: {changes.Count}" +
+                    (apostrophes > 0 ? $", of which apostrophe corrections: {apostrophes}" : "") +
+                    (whitespaceOnly > 0 ? $", of which trailing whitespace only: {whitespaceOnly}" : ""));
 
                 // Ask once whether trailing whitespace may be cleaned without per-cell confirmation.
                 bool autoWhitespace = false;
                 if (whitespaceOnly > 0)
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"Es wurden {whitespaceOnly} Zelle(n) mit Leerzeichen am Ende gefunden.");
-                    Console.Write("Sollen diese Leerzeichen automatisch (ohne Einzelabfrage) entfernt werden? (j/n): ");
+                    Console.WriteLine($"Found {whitespaceOnly} cell(s) with trailing whitespace.");
+                    Console.Write("Should these be removed automatically (without per-cell confirmation)? (j/n): ");
                     string answer = (Console.ReadLine() ?? string.Empty).Trim().ToLowerInvariant();
                     autoWhitespace = answer == "j" || answer == "ja" || answer == "y";
                     Log(autoWhitespace
-                        ? "Leerzeichen am Ende werden automatisch entfernt."
-                        : "Leerzeichen am Ende werden einzeln abgefragt.");
+                        ? "Trailing whitespace will be removed automatically."
+                        : "Trailing whitespace will be asked per cell.");
                 }
 
                 // Phase 2: let the user confirm every single change.
@@ -493,28 +493,28 @@ namespace WFDOTToolKit
                 if (toAsk.Count > 0)
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"Es gibt {toAsk.Count} zu ändernde Zelle(n), die bestätigt werden müssen.");
-                    Console.WriteLine("Antworten: j = übernehmen, n = unverändert lassen, a = alle restlichen übernehmen, q = abbrechen (nichts speichern)");
+                    Console.WriteLine($"There are {toAsk.Count} cell(s) that need to be changed and require confirmation.");
+                    Console.WriteLine("Answers: j = accept, n = leave unchanged, a = accept all remaining, q = cancel (nothing saved)");
                     Console.WriteLine();
 
                     int index = 0;
                     foreach (var change in toAsk)
                     {
                         index++;
-                        Console.WriteLine($"--- Änderung {index} von {toAsk.Count} ---");
-                        Console.WriteLine($"  Zeile {change.Row}, Spalte {change.Column} (\"{change.ColumnName}\")");
-                        Console.WriteLine($"  alt:   \"{change.Original}\"");
-                        Console.WriteLine($"  neu:   \"{change.DisplayValue}\"" + (change.IsApostrophe ? "   [Apostroph-Korrektur]" : "   [Leerzeichen am Ende]"));
+                        Console.WriteLine($"--- Change {index} of {toAsk.Count} ---");
+                        Console.WriteLine($"  Row {change.Row}, Column {change.Column} (\"{change.ColumnName}\")");
+                        Console.WriteLine($"  old:   \"{change.Original}\"");
+                        Console.WriteLine($"  new:   \"{change.DisplayValue}\"" + (change.IsApostrophe ? "   [Apostrophe correction]" : "   [Trailing whitespace]"));
 
                         if (approveAll)
                         {
                             change.Approved = true;
                             approved++;
-                            Console.WriteLine("  -> übernommen (a)");
+                            Console.WriteLine("  -> Accepted (a)");
                             continue;
                         }
 
-                        Console.Write("  übernehmen? (j/n/a/q): ");
+                        Console.Write("  Accept? (j/n/a/q): ");
                         string answer = (Console.ReadLine() ?? string.Empty).Trim().ToLowerInvariant();
                         Console.WriteLine();
 
@@ -536,7 +536,7 @@ namespace WFDOTToolKit
                             case "quit":
                             case "abbrechen":
                                 cancelled = true;
-                                Log("Abbruch durch Benutzer.");
+                                Log("User cancelled.");
                                 break;
                             default:
                                 change.Approved = false;
@@ -553,8 +553,8 @@ namespace WFDOTToolKit
 
                 if (!cancelled)
                 {
-                    Log($"Übernommen: {approved}, abgelehnt: {rejected}" +
-                        (changes.Count == 0 ? " (keine Änderungen nötig)" : ""));
+                    Log($"Applied: {approved}, rejected: {rejected}" +
+                        (changes.Count == 0 ? " (no changes needed)" : ""));
                 }
 
                 if (approved > 0)
@@ -563,7 +563,7 @@ namespace WFDOTToolKit
                     // would overwrite formulas and every untouched cell, so the changes are
                     // grouped per column into contiguous blocks and each block is written with
                     // a single Range call (fast and reliable, unlike hundreds of single-cell writes).
-                    Log("Schreibe bestätigte Werte zurück in die Excel-Datei (nur die geänderten Zellen) ...");
+                    Log("Writing confirmed values back into the Excel file (only the changed cells) ...");
                     int writtenBlocks = 0;
                     int writtenCells = 0;
 
@@ -631,39 +631,39 @@ namespace WFDOTToolKit
                             i = j + 1;
                         }
                     }
-                    Log($"  Geschriebene Zellen: {writtenCells} (in {writtenBlocks} Block(en))");
+                    Log($"  Cells written: {writtenCells} (in {writtenBlocks} block(s))");
 
-                    Log("Speichere Excel-Datei ...");
+                    Log("Saving Excel file ...");
                     xlWorkbook.Save();
-                    Log("Excel-Datei gespeichert.");
+                    Log("Excel file saved.");
 
                     // Verify AFTER saving: re-open the workbook and read the values back.
                     // Reading from the still-open instance can return stale cached values.
-                    Log("Verifiziere gespeicherte Datei (erneut öffnen) ...");
+                    Log("Verifying saved file (re-opening) ...");
                     VerifySavedCells(excelPath, changes);
                 }
                 else if (cancelled)
                 {
-                    Log("Abbruch: Excel-Datei bleibt unverändert (nichts gespeichert).");
+                    Log("Cancelled: Excel file stays unchanged (nothing saved).");
                 }
                 else if (changes.Count == 0)
                 {
-                    Log("Keine Änderungen nötig; Excel-Datei bleibt unverändert.");
+                    Log("No changes needed; Excel file stays unchanged.");
                 }
                 else
                 {
-                    Log("Keine Änderung bestätigt; Excel-Datei bleibt unverändert.");
+                    Log("No change confirmed; Excel file stays unchanged.");
                 }
             }
             catch (Exception ex)
             {
-                Log($"=== FEHLER: {ex.Message} ===");
-                Log($"Die Originaldatei wurde nicht verändert. Backup siehe oben.");
+                Log($"=== ERROR: {ex.Message} ===");
+                Log("The original file was not modified. Backup see above.");
                 throw;
             }
             finally
             {
-                Log("Schließe Excel und räume auf ...");
+                Log("Closing Excel and cleaning up ...");
                 if (xlWorkbook != null)
                 {
                     xlWorkbook.Close(false);
@@ -685,11 +685,11 @@ namespace WFDOTToolKit
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-                Log("Aufgeräumt.");
+                Log("Cleaned up.");
             }
 
             stopwatch.Stop();
-            Log($"=== Excel-Cleanup erfolgreich abgeschlossen in {stopwatch.Elapsed.TotalSeconds:F1} s ===");
+            Log($"=== Excel cleanup successfully completed in {stopwatch.Elapsed.TotalSeconds:F1} s ===");
         }
 
         /// <summary>Reads a cell from the prefetched range array as text.</summary>
@@ -736,18 +736,18 @@ namespace WFDOTToolKit
                         mismatches++;
                         if (mismatches <= 10)
                         {
-                            Log($"  WARNUNG: Zeile {change.Row}, Spalte {change.Column} (\"{change.ColumnName}\") nicht gespeichert: erwartet \"{change.DisplayValue}\", gelesen \"{actual}\"");
+                            Log($"  WARNING: Row {change.Row}, Column {change.Column} (\"{change.ColumnName}\") was not saved: expected \"{change.DisplayValue}\", read \"{actual}\"");
                         }
                     }
                 }
 
                 if (mismatches > 0)
                 {
-                    Log($"  ACHTUNG: {mismatches} von {checkedCells} Zellen weichen nach dem Speichern ab.");
+                    Log($"  WARNING: {mismatches} of {checkedCells} cells differ after saving.");
                 }
                 else
                 {
-                    Log($"  Speichern verifiziert ({checkedCells} Zellen geprüft).");
+                    Log($"Save verified ({checkedCells} cells checked).");
                 }
             }
             finally
@@ -903,18 +903,18 @@ namespace WFDOTToolKit
         /// <summary>Drops and recreates the FTS4 index and refills it from WB.</summary>
         private static void RebuildFts(SQLiteConnection connection)
         {
-            Log("  Lösche alten Suchindex (WBFTS) ...");
+            Log("  Deleting old search index (WBFTS) ...");
             Exec(connection, null, "DROP TABLE IF EXISTS WBFTS;");
-            Log("  Erstelle Suchindex (WBFTS) neu ...");
+            Log("  Creating search index (WBFTS) ...");
             Exec(connection, null,
                 "CREATE VIRTUAL TABLE WBFTS USING fts4(ID, Ostfriesisch, Deutsch, Artikel, Wortart, " +
                 "Plural, Genus, Komparation, Konjugation, Nebenformen, Standardform, Zuordnung, Nummer, " +
                 "Englisch, tokenize=unicode61);");
-            Log("  Fülle Suchindex aus Tabelle WB ...");
+            Log("  Filling search index from table WB ...");
             Exec(connection, null,
                 "INSERT INTO WBFTS (" + string.Join(", ", FtsColumns) + ") SELECT " +
                 string.Join(", ", FtsColumns) + " FROM WB;");
-            Log("  Optimiere Suchindex ...");
+            Log("  Optimizing search index ...");
             Exec(connection, null, "INSERT INTO WBFTS(WBFTS) VALUES ('optimize');");
         }
 

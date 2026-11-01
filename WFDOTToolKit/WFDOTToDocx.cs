@@ -63,7 +63,7 @@ namespace WFDOTToolKit
 
         /// <summary>
         /// Word classes that are not shown in square brackets in the dictionary.
-        /// Every other word class produces the text "Wortartfehler".
+        /// Every other word class produces the text "WordClassError".
         /// </summary>
         private static readonly HashSet<string> WordClassesWithoutLabel = new HashSet<string>(StringComparer.Ordinal)
         {
@@ -83,14 +83,14 @@ namespace WFDOTToolKit
             }
             Directory.CreateDirectory(path);
 
-            Log("Lese Datenbank ...");
+            Log("Reading database ...");
             var loadWatch = Stopwatch.StartNew();
             List<Entry> entries;
             Dictionary<string, List<Entry>> phraseIndex;
             List<Entry> unassignedPhrases;
             LoadData(testMode, out entries, out phraseIndex, out unassignedPhrases);
-            Log($"  {entries.Count} Einträge und {phraseIndex.Count} Phrasen-Zuordnungen in " +
-                $"{loadWatch.Elapsed.TotalSeconds:F1} s gelesen.");
+            Log($"  {entries.Count} entries and {phraseIndex.Count} phrase assignments read in " +
+                $"{loadWatch.Elapsed.TotalSeconds:F1} s.");
 
             var files = new List<string>();
             var fileCount = Math.Max(1, (entries.Count + EntriesPerFile - 1) / EntriesPerFile);
@@ -100,7 +100,7 @@ namespace WFDOTToolKit
                 fileNames[index] = Path.Combine(path, $"out{index}.docx");
             }
 
-            Log($"Erzeuge {fileCount} Teildateien ...");
+            Log($"Generating {fileCount} part files ...");
             var generationWatch = Stopwatch.StartNew();
             var done = 0;
             Parallel.For(0, fileCount, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, index =>
@@ -111,27 +111,27 @@ namespace WFDOTToolKit
                 var finished = System.Threading.Interlocked.Increment(ref done);
                 if (finished % 10 == 0 || finished == fileCount)
                 {
-                    Log($"  ... {finished} von {fileCount} Teildateien");
+                    Log($"  ... {finished} of {fileCount} part files");
                 }
             });
             files.AddRange(fileNames);
-            Log($"  Teildateien erzeugt in {generationWatch.Elapsed.TotalSeconds:F1} s.");
+            Log($"  Part files generated in {generationWatch.Elapsed.TotalSeconds:F1} s.");
 
             if (unassignedPhrases.Count > 0)
             {
-                Log($"Erzeuge Datei der unzugeordneten Phrasen ({unassignedPhrases.Count}) ...");
+                Log($"Generating file with unassigned phrases ({unassignedPhrases.Count}) ...");
                 var fileUnassigned = Path.Combine(path, "outOhneZu.docx");
                 WriteUnassignedPhrases(fileUnassigned, unassignedPhrases);
                 files.Add(fileUnassigned);
             }
 
-            Log("Füge Teildateien zu " + MainFileName + " zusammen ...");
+            Log("Merging part files into " + MainFileName + " ...");
             var mergeWatch = Stopwatch.StartNew();
             MergeFiles(GetMainFile(path), files);
-            Log($"  {MainFileName} erzeugt in {mergeWatch.Elapsed.TotalSeconds:F1} s.");
+            Log($"  {MainFileName} generated in {mergeWatch.Elapsed.TotalSeconds:F1} s.");
 
-            Log($"Fertig: {files.Count + 1} Dateien in {path} " +
-                $"(Gesamtzeit {totalWatch.Elapsed.TotalSeconds:F1} s).");
+            Log($"Done: {files.Count + 1} files in {path} " +
+                $"(total time {totalWatch.Elapsed.TotalSeconds:F1} s).");
         }
 
         /// <summary>Returns the path of the merged document inside the output folder.</summary>
@@ -293,7 +293,7 @@ namespace WFDOTToolKit
         {
             var text = new StringBuilder(96);
             var wordClass = row.Wortart != "-" && !WordClassesWithoutLabel.Contains(row.Wortart)
-                ? "Wortartfehler"
+                ? "WordClassError"
                 : "-";
 
             var hasArticle = row.Artikel != "-";
@@ -412,7 +412,7 @@ namespace WFDOTToolKit
                 case "n":
                     return "n.";
                 default:
-                    return "Genusfehler";
+                    return "GenusError";
             }
         }
 
@@ -438,7 +438,7 @@ namespace WFDOTToolKit
             var body = doc.Xml;
 
             body.Add(CreateParagraph(CreateRun(Environment.NewLine, PhraseFontSize, false, false)));
-            body.Add(CreateParagraph(CreateRun("Unzugeordnete Phrasen:", EntryFontSize, false, false)));
+            body.Add(CreateParagraph(CreateRun("Unassigned phrases:", EntryFontSize, false, false)));
             body.Add(CreateParagraph(CreateRun(Environment.NewLine, PhraseFontSize, false, false)));
 
             foreach (var phrase in phrases)

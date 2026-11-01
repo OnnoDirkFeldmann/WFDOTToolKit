@@ -18,16 +18,16 @@ namespace WFDOTToolKit
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Title = "WFDOT Excel-Datei auswählen";
-                dialog.Filter = "Excel-Arbeitsmappe (*.xlsm;*.xlsx)|*.xlsm;*.xlsx|Alle Dateien (*.*)|*.*";
-                Log("Datei-Dialog geöffnet, warte auf Auswahl ...");
+                dialog.Title = "Select WFDOT Excel file";
+                dialog.Filter = "Excel workbook (*.xlsm;*.xlsx)|*.xlsm;*.xlsx|All files (*.*)|*.*";
+                Log("File dialog opened, waiting for selection ...");
                 if (dialog.ShowDialog() != DialogResult.OK)
                 {
-                    Log("Abgebrochen (keine Datei ausgewählt).");
+                    Log("Cancelled (no file selected).");
                     return;
                 }
 
-                Log($"Ausgewählte Datei: {dialog.FileName}");
+                Log($"Selected file: {dialog.FileName}");
                 Process(dialog.FileName);
             }
         }
@@ -36,13 +36,13 @@ namespace WFDOTToolKit
         {
             if (!File.Exists(excelPath))
             {
-                throw new FileNotFoundException("Excel-Datei nicht gefunden.", excelPath);
+                throw new FileNotFoundException("Excel file not found.", excelPath);
             }
 
             var backupPath = Path.Combine(
                 Path.GetDirectoryName(excelPath),
                 Path.GetFileNameWithoutExtension(excelPath) + "_backup_nummerierung_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + Path.GetExtension(excelPath));
-            Log($"Erstelle Backup: {backupPath}");
+            Log($"Created backup: {backupPath}");
             File.Copy(excelPath, backupPath, true);
 
             Excel.Application xlApp = null;
@@ -52,17 +52,17 @@ namespace WFDOTToolKit
 
             try
             {
-                Log("Starte Excel ...");
+                Log("Starting Excel ...");
                 xlApp = new Excel.Application { Visible = false, DisplayAlerts = false };
-                Log("Öffne Excel-Datei (beschreibbar) ...");
+                Log("Opening Excel file (writable) ...");
                 xlWorkbook = xlApp.Workbooks.Open(excelPath);
                 xlWorksheet = (Excel.Worksheet)xlWorkbook.Sheets[1];
-                Log($"Verwende Arbeitsblatt: \"{xlWorksheet.Name}\"");
+                Log($"Using worksheet: \"{xlWorksheet.Name}\"");
                 xlRange = xlWorksheet.UsedRange;
 
                 int rowCount = xlRange.Rows.Count;
                 int colCount = xlRange.Columns.Count;
-                Log($"Erkannter Bereich: {rowCount - 1} Datenzeilen, {colCount} Spalten");
+                Log($"Detected range: {rowCount - 1} data rows, {colCount} columns");
 
                 var cells = (object[,])xlRange.Value2;
                 var formulas = (object[,])xlRange.Formula;
@@ -130,15 +130,15 @@ namespace WFDOTToolKit
 
                 if (duplicatesToProcess.Count == 0)
                 {
-                    Log("Keine unnummerierten Duplikate gefunden.");
+                    Log("No unnumbered duplicates found.");
                     return;
                 }
 
-                Log($"Gefunden: {duplicatesToProcess.Count} Ostfriesisch-Einträge mit Duplikaten ohne vollständige Nummerierung.");
+                Log($"Found: {duplicatesToProcess.Count} Ostfriesisch entries with duplicates lacking a complete number.");
                 Console.WriteLine();
-                Console.WriteLine("Für jeden Duplikat-Eintrag kann eine Nummer vergeben werden.");
-                Console.WriteLine("Wenn bereits eine Nummer vorhanden ist (z. B. 1), kann diese bestätigt/übersprungen werden.");
-                Console.WriteLine("Antworten: Zahl (z. B. 1,2,3) = Nummer setzen, s = überspringen, a = automatisch durchnummerieren, q = abbrechen");
+                Console.WriteLine("A number can be assigned to each duplicate entry.");
+                Console.WriteLine("If a number is already present (e.g. 1), it can be confirmed/skipped.");
+                Console.WriteLine("Answers: number (e.g. 1,2,3) = set number, s = skip, a = automatically number, q = cancel");
                 Console.WriteLine();
 
                 int updated = 0;
@@ -146,7 +146,7 @@ namespace WFDOTToolKit
                 {
                     string key = kv.Key;
                     var rows = kv.Value.OrderBy(r => r.Row).ToList();
-                    Console.WriteLine($"=== Duplikate für \"{key}\" ({rows.Count} Einträge) ===");
+                    Console.WriteLine($"=== Duplicates for \"{key}\" ({rows.Count} entries) ===");
                     
                     // Find next available number for this group
                     var existingNums = rows
@@ -165,7 +165,7 @@ namespace WFDOTToolKit
 
                     foreach (var rowInfo in rows)
                     {
-                        Console.WriteLine($"  Zeile {rowInfo.Row}: Ostfriesisch=\"{rowInfo.Ostfriesisch}\", Nummer=\"{(string.IsNullOrEmpty(rowInfo.Nummer) || rowInfo.Nummer == "-" ? "(leer)" : rowInfo.Nummer)}\"");
+                        Console.WriteLine($"  Row {rowInfo.Row}: Ostfriesisch=\"{rowInfo.Ostfriesisch}\", Nummer=\"{(string.IsNullOrEmpty(rowInfo.Nummer) || rowInfo.Nummer == "-" ? "(empty)" : rowInfo.Nummer)}\"");
                     }
                     Console.WriteLine();
 
@@ -176,9 +176,9 @@ namespace WFDOTToolKit
                         bool hasNumber = !string.IsNullOrEmpty(rowInfo.Nummer) && rowInfo.Nummer != "-" && !rowInfo.Nummer.Equals("0", StringComparison.OrdinalIgnoreCase);
                         if (hasNumber && !groupAuto)
                         {
-                            Console.Write($"  Zeile {rowInfo.Row} hat bereits Nummer \"{rowInfo.Nummer}\" - beibehalten? (j/n/q): ");
+                            Console.Write($"  Row {rowInfo.Row} already has number \"{rowInfo.Nummer}\" - keep? (j/n/q): ");
                             string ans = (Console.ReadLine() ?? string.Empty).Trim().ToLowerInvariant();
-                            if (ans == "q") { Log("Abbruch durch Benutzer."); goto SaveAndExit; }
+                            if (ans == "q") { Log("User cancelled."); goto SaveAndExit; }
                             if (ans == "n" || ans == "nein") { hasNumber = false; }
                             else { continue; } // keep existing
                         }
@@ -192,13 +192,13 @@ namespace WFDOTToolKit
                                 SetCell(xlWorksheet, rowInfo.Row, numCol, numToSet);
                                 rowInfo.Nummer = numToSet;
                                 updated++;
-                                Console.WriteLine($"    -> Zeile {rowInfo.Row}: Nummer auf {numToSet} gesetzt (auto)");
+                                Console.WriteLine($"    -> Row {rowInfo.Row}: number set to {numToSet} (auto)");
                                 continue;
                             }
 
-                            Console.Write($"  Nummer für Zeile {rowInfo.Row} festlegen (Enter = {nextNum}, 's' skip, 'a' auto für Rest, 'q' abbrechen): ");
+                            Console.Write($"  Enter a number for row {rowInfo.Row} (Enter = {nextNum}, 's' skip, 'a' auto for the rest, 'q' cancel): ");
                             string input = (Console.ReadLine() ?? string.Empty).Trim().ToLowerInvariant();
-                            if (input == "q") { Log("Abbruch durch Benutzer."); goto SaveAndExit; }
+                            if (input == "q") { Log("User cancelled."); goto SaveAndExit; }
                             if (input == "s" || input == "skip") { continue; }
                             if (input == "a" || input == "auto") 
                             { 
@@ -208,7 +208,7 @@ namespace WFDOTToolKit
                                 SetCell(xlWorksheet, rowInfo.Row, numCol, numToSet);
                                 rowInfo.Nummer = numToSet;
                                 updated++;
-                                Console.WriteLine($"    -> Zeile {rowInfo.Row}: Nummer auf {numToSet} gesetzt (auto)");
+                                Console.WriteLine($"    -> Row {rowInfo.Row}: number set to {numToSet} (auto)");
                                 continue; 
                             }
                             if (string.IsNullOrEmpty(input))
@@ -221,11 +221,11 @@ namespace WFDOTToolKit
                                 rowInfo.Nummer = setNum.ToString();
                                 if (setNum >= nextNum) nextNum = setNum + 1;
                                 updated++;
-                                Console.WriteLine($"    -> Zeile {rowInfo.Row}: Nummer auf {setNum} gesetzt");
+                                Console.WriteLine($"    -> Row {rowInfo.Row}: number set to {setNum}");
                             }
                             else
                             {
-                                Console.WriteLine("    -> Ungültig, übersprungen");
+                                Console.WriteLine("    -> Invalid, skipped");
                             }
                         }
                     }
@@ -235,30 +235,30 @@ namespace WFDOTToolKit
                 SaveAndExit:
                 if (updated > 0)
                 {
-                    Log($"Speichere {updated} Änderungen ...");
+                    Log($"Saving {updated} changes ...");
                     xlWorkbook.Save();
-                    Log("Excel-Datei gespeichert.");
+                    Log("Excel file saved.");
                 }
                 else
                 {
-                    Log("Keine Änderungen.");
+                    Log("No changes.");
                 }
             }
             catch (Exception ex)
             {
-                Log($"=== FEHLER: {ex.Message} ===");
+                Log($"=== ERROR: {ex.Message} ===");
                 throw;
             }
             finally
             {
-                Log("Schließe Excel und räume auf ...");
+                Log("Closing Excel and cleaning up ...");
                 if (xlWorkbook != null) { xlWorkbook.Close(false); System.Runtime.InteropServices.Marshal.ReleaseComObject(xlWorkbook); }
                 if (xlWorksheet != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(xlWorksheet);
                 if (xlRange != null) System.Runtime.InteropServices.Marshal.ReleaseComObject(xlRange);
                 if (xlApp != null) { xlApp.Quit(); System.Runtime.InteropServices.Marshal.ReleaseComObject(xlApp); }
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-                Log("Aufgeräumt.");
+                Log("Cleaned up.");
             }
         }
 
