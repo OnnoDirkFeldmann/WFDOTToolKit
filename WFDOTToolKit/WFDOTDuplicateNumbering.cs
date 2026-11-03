@@ -88,11 +88,11 @@ namespace WFDOTToolKit
 
                 if (!headerToColumn.TryGetValue("Ostfriesisch", out int ostCol))
                 {
-                    throw new InvalidOperationException("Spalte 'Ostfriesisch' nicht gefunden.");
+                    throw new InvalidOperationException("Column 'Ostfriesisch' not found.");
                 }
                 if (!headerToColumn.TryGetValue("Nummer", out int numCol))
                 {
-                    throw new InvalidOperationException("Spalte 'Nummer' nicht gefunden.");
+                    throw new InvalidOperationException("Column 'Nummer' not found.");
                 }
 
                 // Group duplicates by Ostfriesisch
@@ -179,7 +179,7 @@ namespace WFDOTToolKit
                             Console.Write($"  Row {rowInfo.Row} already has number \"{rowInfo.Nummer}\" - keep? (j/n/q): ");
                             string ans = (Console.ReadLine() ?? string.Empty).Trim().ToLowerInvariant();
                             if (ans == "q") { Log("User cancelled."); goto SaveAndExit; }
-                            if (ans == "n" || ans == "nein") { hasNumber = false; }
+                            if (ans == "n") { hasNumber = false; }
                             else { continue; } // keep existing
                         }
 

@@ -884,7 +884,7 @@ namespace WFDOTToolKit
             {
                 // Already has an apostrophe ('k or ''k) -> leave it completely alone.
                 // Doubling it here would only produce a change that looks like a no-op
-                // (alt == neu) and would show up again on every run.
+                // (old == new) and would show up again on every run.
                 if (value.StartsWith("'", StringComparison.Ordinal))
                 {
                     return value;
